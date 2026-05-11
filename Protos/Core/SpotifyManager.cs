@@ -143,22 +143,50 @@ namespace Protos.Core
         }
 
         /// <summary>
-        /// Replicates AHK WinActivate: attach to foreground thread first so
-        /// SetForegroundWindow is not blocked by the foreground lock.
+        /// Brings the window to the front and gives it keyboard focus.
+        ///
+        /// Two separate problems require two separate fixes:
+        ///
+        /// Z-ORDER: ShowWindow(SW_RESTORE/SW_SHOW) does not change z-order — the window
+        /// can still sit behind other windows. The "topmost trick" (set HWND_TOPMOST then
+        /// immediately remove it) bypasses the foreground lock entirely: it physically
+        /// raises the window above all non-topmost windows without stealing focus in a
+        /// restricted way.
+        ///
+        /// FOCUS: SetForegroundWindow is silently blocked (causing taskbar blinking) when
+        /// the calling process is not the foreground process. Attaching the FOREGROUND
+        /// thread's input queue to OUR thread tricks Windows into granting permission.
+        /// Correct direction is AttachThreadInput(fgTid → myTid), not the reverse.
         /// </summary>
         private static void Activate(IntPtr hwnd)
         {
+            // ── Step 1: fix z-order via topmost trick ─────────────────────────
+            // HWND_TOPMOST  = -1  →  inserts into the topmost layer
+            // HWND_NOTOPMOST= -2  →  moves back, but stays at top of normal layer
+            const uint SWP_NOMOVE     = 0x0002;
+            const uint SWP_NOSIZE     = 0x0001;
+            const uint SWP_NOACTIVATE = 0x0010;
+            const uint SWP_SHOWWINDOW = 0x0040;
+            uint flags = SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW;
+
+            SetWindowPos(hwnd, new IntPtr(-1), 0, 0, 0, 0, flags);
+            SetWindowPos(hwnd, new IntPtr(-2), 0, 0, 0, 0, flags | SWP_NOACTIVATE);
+
+            // ── Step 2: give keyboard focus ───────────────────────────────────
+            // Attach the FOREGROUND thread's input to our thread so that
+            // SetForegroundWindow is not blocked.
             IntPtr fg  = NativeMethods.GetForegroundWindow();
             uint fgTid = NativeMethods.GetWindowThreadProcessId(fg, out _);
             uint myTid = GetCurrentThreadId();
 
-            if (fgTid != myTid)
-                AttachThreadInput(myTid, fgTid, true);
+            bool attached = fgTid != 0 && fgTid != myTid &&
+                            AttachThreadInput(fgTid, myTid, true);
 
             NativeMethods.SetForegroundWindow(hwnd);
+            BringWindowToTop(hwnd);
 
-            if (fgTid != myTid)
-                AttachThreadInput(myTid, fgTid, false);
+            if (attached)
+                AttachThreadInput(fgTid, myTid, false);
         }
 
         [DllImport("user32.dll")]
@@ -168,7 +196,14 @@ namespace Protos.Core
         private static extern int GetWindowText(IntPtr hWnd, StringBuilder lpString, int nMaxCount);
 
         [DllImport("user32.dll")]
+        private static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter,
+            int x, int y, int cx, int cy, uint uFlags);
+
+        [DllImport("user32.dll")]
         private static extern bool AttachThreadInput(uint idAttach, uint idAttachTo, bool fAttach);
+
+        [DllImport("user32.dll")]
+        private static extern bool BringWindowToTop(IntPtr hWnd);
 
         [DllImport("kernel32.dll")]
         private static extern uint GetCurrentThreadId();
