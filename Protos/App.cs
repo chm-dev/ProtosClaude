@@ -27,6 +27,8 @@ namespace Protos
 
         private AppSettings              _settings;
         private ToolStripMenuItem?       _suspendItem;
+        private ToolStripMenuItem?       _caffeineItem;
+        private readonly CaffeineManager _caffeineMgr;
 
         public App()
         {
@@ -36,6 +38,7 @@ namespace Protos
             _settings = AppSettings.Load();
 
             // ── Build state and managers ──────────────────────────────────────
+            _caffeineMgr   = new CaffeineManager();
             _appState      = new AppState();
             _winMgr        = new WindowManager(_appState)    { ResizeStep = _settings.ResizeStep };
             _volMgr        = new VolumeManager()             { VolumeStep = _settings.VolumeStep };
@@ -94,6 +97,11 @@ namespace Protos
             _suspendItem.CheckOnClick = false;
             _suspendItem.Click += (_, _) => ToggleSuspend();
             menu.Items.Add(_suspendItem);
+
+            _caffeineItem = new ToolStripMenuItem("Caffeine");
+            _caffeineItem.CheckOnClick = false;
+            _caffeineItem.Click += (_, _) => ToggleCaffeine();
+            menu.Items.Add(_caffeineItem);
 
             menu.Items.Add(new ToolStripSeparator());
 
@@ -164,6 +172,13 @@ namespace Protos
                 SoundPlayer.Play(SoundPlayer.GetSoundPath("protos_active.mp3"));
         }
 
+        private void ToggleCaffeine()
+        {
+            _caffeineMgr.SetActive(!_caffeineMgr.IsActive);
+            if (_caffeineItem != null)
+                _caffeineItem.Checked = _caffeineMgr.IsActive;
+        }
+
         private static void ReloadProcess()
         {
             string? exePath = Environment.ProcessPath;
@@ -177,6 +192,7 @@ namespace Protos
 
         public void Dispose()
         {
+            _caffeineMgr.Dispose();
             _dispatcher.Dispose();
             _kbdHook.Dispose();
             _mouseHook.Dispose();
