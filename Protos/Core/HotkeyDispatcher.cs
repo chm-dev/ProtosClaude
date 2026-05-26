@@ -418,7 +418,6 @@ namespace Protos.Core
 
         private static void ReloadApp()
         {
-            SoundPlayer.Play(SoundPlayer.GetSoundPath("protos_active.mp3"));
             var exePath = Environment.ProcessPath ?? System.Reflection.Assembly.GetExecutingAssembly().Location;
             System.Diagnostics.Process.Start(exePath);
             Application.Exit();
@@ -427,26 +426,16 @@ namespace Protos.Core
         private void Suspend()
         {
             _state.Suspended = true;
-            SoundPlayer.Play(SoundPlayer.GetSoundPath("protos_suspended.mp3"));
             App.Instance?.SetSuspended(true);
         }
 
         private void Resume()
         {
             _state.Suspended = false;
-            SoundPlayer.Play(SoundPlayer.GetSoundPath("protos_active.mp3"));
             App.Instance?.SetSuspended(false);
         }
 
-        private static void ExitApp()
-        {
-            SoundPlayer.Play(SoundPlayer.GetSoundPath("protos_exiting.mp3"));
-            Task.Run(async () =>
-            {
-                await Task.Delay(1800);
-                Application.Exit();
-            });
-        }
+        private static void ExitApp() => Application.Exit();
 
         // ── Helper predicates ────────────────────────────────────────────────
 

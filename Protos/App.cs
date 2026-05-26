@@ -72,8 +72,6 @@ namespace Protos
             ForceKeyOff(0x14); // VK_CAPITAL
             ForceKeyOff(0x90); // VK_NUMLOCK
 
-            // ── Play startup sound ────────────────────────────────────────────
-            SoundPlayer.Play(SoundPlayer.GetSoundPath("protos_active.mp3"));
         }
 
         // ── Tray icon ─────────────────────────────────────────────────────────
@@ -106,15 +104,7 @@ namespace Protos
             menu.Items.Add(new ToolStripSeparator());
 
             var exitItem = new ToolStripMenuItem("Exit");
-            exitItem.Click += (_, _) =>
-            {
-                SoundPlayer.Play(SoundPlayer.GetSoundPath("protos_exiting.mp3"));
-                Task.Run(async () =>
-                {
-                    await Task.Delay(1800);
-                    Application.Exit();
-                });
-            };
+            exitItem.Click += (_, _) => Application.Exit();
             menu.Items.Add(exitItem);
 
             var tray = new NotifyIcon
@@ -166,10 +156,6 @@ namespace Protos
         {
             bool nowSuspended = !_appState.Suspended;
             SetSuspended(nowSuspended);
-            if (nowSuspended)
-                SoundPlayer.Play(SoundPlayer.GetSoundPath("protos_suspended.mp3"));
-            else
-                SoundPlayer.Play(SoundPlayer.GetSoundPath("protos_active.mp3"));
         }
 
         private void ToggleCaffeine()

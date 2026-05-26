@@ -62,7 +62,6 @@ Core/
  HotkeyDispatcher.cs
  HotstringManager.cs
  MonitorManager.cs
- SoundPlayer.cs
  SpotifyManager.cs
  VolumeManager.cs
  WindowManager.cs

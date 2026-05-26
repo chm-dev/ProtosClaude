@@ -146,10 +146,6 @@ namespace Protos.Native
         [DllImport("kernel32.dll", CharSet = CharSet.Auto)]
         public static extern IntPtr GetModuleHandle(string? lpModuleName);
 
-        // ── Sound ────────────────────────────────────────────────────────────
-        [DllImport("winmm.dll", CharSet = CharSet.Auto)]
-        public static extern int mciSendString(string lpstrCommand, StringBuilder? lpstrReturnString, int uReturnLength, IntPtr hwndCallback);
-
         // ── Process ──────────────────────────────────────────────────────────
         [DllImport("kernel32.dll")]
         public static extern uint GetCurrentThreadId();

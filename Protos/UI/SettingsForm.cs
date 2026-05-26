@@ -10,7 +10,6 @@ namespace Protos.UI
         private readonly TabControl           _tabs;
         private readonly Button               _btnSave;
         private readonly Button               _btnCancel;
-        private readonly Button               _btnOpenSounds;
         private readonly TextBox              _spotifyPathBox;
 
         public SettingsForm(AppSettings settings)
@@ -226,17 +225,8 @@ namespace Protos.UI
             _btnSave = new Button { Text = "Save", Width = 80, Height = 28 };
             _btnSave.Click += BtnSave_Click;
 
-            _btnOpenSounds = new Button { Text = "Open Sound Folder", Width = 140, Height = 28 };
-            _btnOpenSounds.Click += (_, _) =>
-            {
-                string soundDir = Path.Combine(AppContext.BaseDirectory, "sounds");
-                Directory.CreateDirectory(soundDir);
-                System.Diagnostics.Process.Start("explorer.exe", soundDir);
-            };
-
             bottomPanel.Controls.Add(_btnCancel);
             bottomPanel.Controls.Add(_btnSave);
-            bottomPanel.Controls.Add(_btnOpenSounds);
 
             Controls.Add(_tabs);
             Controls.Add(bottomPanel);
